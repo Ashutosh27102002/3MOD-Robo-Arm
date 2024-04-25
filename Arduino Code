@@ -1,0 +1,107 @@
+#include <Servo.h>
+
+#define BASE_SERVO_PIN 9
+#define ELBOW_SERVO_PIN 10
+#define WRIST_SERVO_PIN 11
+
+
+Servo baseServo;
+Servo elbowServo;
+Servo wristServo;
+
+
+#define PRECISION_MODE 0
+#define NORMAL_MODE 1
+#define LOW_PRECISION_MODE 2
+
+
+int mode = PRECISION_MODE;
+
+int stepSizes[] = {3, 10, 15};
+
+// Function to move servos
+void moveServos(int baseAngle, int elbowAngle, int wristAngle) {
+  baseServo.write(baseAngle);
+  elbowServo.write(elbowAngle);
+  wristServo.write(wristAngle);
+}
+
+// Function to set mode
+void setMode(int newMode) {
+  mode = newMode;
+}
+
+void setup() {
+  
+  baseServo.attach(BASE_SERVO_PIN);
+  elbowServo.attach(ELBOW_SERVO_PIN);
+  wristServo.attach(WRIST_SERVO_PIN);
+  
+  // My initial position
+  moveServos(90, 90, 90);
+}
+
+void loop() {
+  // I could have checked for mode change input too (a button or any other sensor)
+  // I'm using serial input,can be replaced with any mode change mechanism
+  if (Serial.available() > 0) {
+    char modeInput = Serial.read();
+    switch (modeInput) {
+      case '1':
+        setMode(PRECISION_MODE);
+        break;
+      case '2':
+        setMode(NORMAL_MODE);
+        break;
+      case '3':
+        setMode(LOW_PRECISION_MODE);
+        break;
+      default:
+        break;
+    }
+  }
+  
+  
+  if (Serial.available() > 0) {
+    char command = Serial.read();
+    int step = stepSizes[mode];
+    switch (command) {
+      case 'b':
+        moveServos(baseServo.read() + step, elbowServo.read(), wristServo.read());
+        break;
+      case 'a':
+        moveServos(baseServo.read() - step, elbowServo.read(), wristServo.read());
+        break;
+      case 'e':
+        moveServos(baseServo.read(), elbowServo.read() + step, wristServo.read());
+        break;
+      case 'l':
+        moveServos(baseServo.read(), elbowServo.read() - step, wristServo.read());
+        break;
+      case 'w':
+        moveServos(baseServo.read(), elbowServo.read(), wristServo.read() + step);
+        break;
+      case 'r':
+        moveServos(baseServo.read(), elbowServo.read(), wristServo.read() - step);
+        break;
+      default:
+        break;
+    }
+  }
+  
+//to control my servo speed
+  switch (mode) {
+    case PRECISION_MODE:
+      delay(100);
+      break;
+    case NORMAL_MODE:
+      delay(300);
+      break;
+    case LOW_PRECISION_MODE:
+      delay(500);
+      break;
+    default:
+      break;
+  }
+}
+
